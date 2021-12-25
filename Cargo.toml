@@ -7,4 +7,5 @@ edition = "2021"
 
 [dependencies]
 redis = { version = "0.21.4", features = ["tokio-comp"] }
-rocket = "0.5.0-rc.1"
+rocket = { version = "0.5.0-rc.1", features = ["secrets", "tls", "json"] }
+serde = "1.0.132"

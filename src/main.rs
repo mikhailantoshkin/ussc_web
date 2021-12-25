@@ -1,4 +1,5 @@
 mod convertor;
+mod database;
 
 use rocket::{Build, State};
 
@@ -6,7 +7,10 @@ use rocket::{Build, State};
 extern crate rocket;
 
 fn rocket() -> rocket::Rocket<Build> {
-    rocket::build().attach(convertor::stage())
+    rocket::build()
+        .manage(redis::Client::open("redis://localhost:6379/").unwrap())
+        .mount("/", convertor::routes())
+        .mount("/", database::routes())
 }
 
 #[rocket::main]
