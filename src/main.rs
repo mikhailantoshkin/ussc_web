@@ -1,7 +1,8 @@
 mod convertor;
 mod database;
+mod errors;
 
-use rocket::{Build, State};
+use rocket::Build;
 
 #[macro_use]
 extern crate rocket;
