@@ -1,5 +1,5 @@
 [package]
-name = "ussc_web"
+name = "server"
 version = "0.1.0"
 edition = "2021"
 
@@ -7,5 +7,5 @@ edition = "2021"
 
 [dependencies]
 redis = { version = "0.21.4", features = ["tokio-comp"] }
-rocket = { version = "0.5.0-rc.1", features = ["secrets", "tls", "json"] }
+rocket = { version = "0.5.0-rc.1", features = ["json"] }
 serde = "1.0.132"

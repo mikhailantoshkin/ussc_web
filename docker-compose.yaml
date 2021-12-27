@@ -1,0 +1,14 @@
+version: "3.9"
+services:
+  server:
+    container_name: server
+    build:
+      context: .
+      dockerfile: ./server/Dockerfile
+    ports:
+      - "0.0.0.0:1234:8000"
+    links:
+      - redis
+  redis:
+    container_name: redis
+    image: redis

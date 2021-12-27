@@ -19,7 +19,7 @@ async fn database(
     redis_client: &State<redis::Client>,
 ) -> EmptyResult {
     let mut conn = redis_client.get_async_connection().await?;
-    if merge {
+    if !merge {
         let _: () = redis::cmd("FLUSHALL").query_async(&mut conn).await.unwrap();
     }
     for rate in rates.iter() {
