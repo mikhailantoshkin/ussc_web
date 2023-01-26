@@ -1,10 +1,9 @@
+use axum::{
+    http::StatusCode,
+    response::{IntoResponse, Response},
+    Json,
+};
 use redis::{ErrorKind, RedisError};
-use rocket::http::Status;
-use rocket::request::Request;
-use rocket::response::{Responder, Response};
-use rocket::serde::json::Json;
-
-use std::io::Cursor;
 
 #[derive(Debug)]
 pub enum ApiError {
@@ -14,23 +13,22 @@ pub enum ApiError {
 pub type EmptyResult = Result<(), ApiError>;
 pub type JsonResult<T> = Result<Json<T>, ApiError>;
 
-// TODO: return body on error
-impl<'r> Responder<'r, 'r> for ApiError {
-    fn respond_to(self, _request: &'r Request<'_>) -> rocket::response::Result<'r> {
-        let message = match self {
+impl IntoResponse for ApiError {
+    fn into_response(self) -> Response {
+        let resp = match self {
             ApiError::RedisError(error) => match error.kind() {
-                ErrorKind::IoError => return Err(Status::ServiceUnavailable),
-                ErrorKind::TypeError => return Err(Status::BadRequest),
+                ErrorKind::IoError => (
+                    StatusCode::SERVICE_UNAVAILABLE,
+                    "Redis is unavailable".to_string(),
+                ),
+                ErrorKind::TypeError => (StatusCode::BAD_REQUEST, "Wrong data format".to_string()),
                 _ => {
                     println!("{:#?}", error);
-                    error.to_string()
+                    (StatusCode::INTERNAL_SERVER_ERROR, error.to_string())
                 }
             },
         };
-        Ok(Response::build()
-            .status(Status::InternalServerError)
-            .sized_body(message.len(), Cursor::new(message))
-            .finalize())
+        resp.into_response()
     }
 }
 

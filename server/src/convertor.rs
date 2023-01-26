@@ -1,30 +1,37 @@
-use redis;
-use redis::AsyncCommands;
-use rocket;
-use rocket::serde::{json::Json, Serialize};
-use rocket::{Route, State};
+use std::sync::Arc;
 
 use crate::errors::JsonResult;
+use axum::{
+    extract::{Query, State},
+    Json,
+};
+use redis::Client;
+use redis::Commands;
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize, Debug)]
+pub struct CurrencyQuery {
+    from: String,
+    to: String,
+    amount: f32,
+}
 
 #[derive(Serialize)]
-struct ConversionResponse {
-    amount: f32,
+pub struct CurrencyResp {
+    result: f32,
 }
 
-#[get("/convert?<from>&<to>&<amount>")]
-async fn convert(
-    from: &str,
-    to: &str,
-    amount: f32,
-    redis_client: &State<redis::Client>,
-) -> JsonResult<ConversionResponse> {
-    let mut conn = redis_client.get_async_connection().await?;
-    let first_rate: f32 = conn.get(from).await?;
-    let second_rate: f32 = conn.get(to).await?;
+pub async fn convert(
+    params: Query<CurrencyQuery>,
+    State(pool): State<Arc<Client>>,
+) -> JsonResult<CurrencyResp> {
+    let from = &params.from;
+    let to = &params.to;
+    let amount = &params.amount;
+
+    let mut conn = pool.get_connection()?;
+    let first_rate: f32 = conn.get(from)?;
+    let second_rate: f32 = conn.get(to)?;
     let converted = first_rate * amount / second_rate;
-    Ok(Json(ConversionResponse { amount: converted }))
-}
-
-pub fn routes() -> Vec<Route> {
-    routes![convert]
+    Ok(Json(CurrencyResp { result: converted }))
 }
